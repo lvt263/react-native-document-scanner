@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   requireNativeComponent,
   NativeModules,
@@ -6,20 +6,29 @@ import {
   Platform,
   PermissionsAndroid,
   DeviceEventEmitter,
-  Text
-} from "react-native";
-import PropTypes from "prop-types";
+  Text,
+} from 'react-native';
+import PropTypes from 'prop-types';
+import platforms from '../src/utils/platforms';
 
-const RNPdfScanner = requireNativeComponent("RNPdfScanner", PdfScanner);
+const RNPdfScanner = requireNativeComponent('RNPdfScanner', PdfScanner);
 const CameraManager = NativeModules.RNPdfScannerManager || {};
 
 class PdfScanner extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      permissionsAuthorized: Platform.OS === "ios"
+      permissionsAuthorized: Platform.OS === 'ios',
     };
   }
+
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   console.log(
+  //     'nextProps.openCamera => ',
+  //     nextProps.openCamera !== this.props.openCamera,
+  //   );
+  //   return nextProps.openCamera !== this.props.openCamera;
+  // }
 
   onPermissionsDenied = () => {
     if (this.props.onPermissionsDenied) this.props.onPermissionsDenied();
@@ -29,22 +38,29 @@ class PdfScanner extends React.Component {
     this.getAndroidPermissions();
   }
 
+  stopCamera() {
+    CameraManager.stopManually();
+  }
+
   async getAndroidPermissions() {
-    if (Platform.OS !== "android") return;
+    if (Platform.OS !== 'android') return;
     try {
       const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.CAMERA,
       ]);
 
       if (
-        granted["android.permission.READ_EXTERNAL_STORAGE"] ===
+        granted['android.permission.READ_EXTERNAL_STORAGE'] ===
           PermissionsAndroid.RESULTS.GRANTED &&
-        granted["android.permission.WRITE_EXTERNAL_STORAGE"] ===
+        granted['android.permission.WRITE_EXTERNAL_STORAGE'] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        granted['android.permission.CAMERA'] ===
           PermissionsAndroid.RESULTS.GRANTED
-      )
-        this.setState({ permissionsAuthorized: true });
-      else this.onPermissionsDenied();
+      ) {
+        this.setState({permissionsAuthorized: true});
+      } else this.onPermissionsDenied();
     } catch (err) {
       this.onPermissionsDenied();
     }
@@ -52,11 +68,16 @@ class PdfScanner extends React.Component {
 
   static defaultProps = {
     onPictureTaken: () => {},
-    onProcessing: () => {}
+    onProcessing: () => {},
+    numOfRectangles: () => {},
   };
 
   sendOnPictureTakenEvent(event) {
     return this.props.onPictureTaken(event.nativeEvent);
+  }
+
+  sendOnnumOfRectanglesEvent(event) {
+    return this.props.numOfRectangles(event.nativeEvent);
   }
 
   sendOnRectanleDetectEvent(event) {
@@ -72,19 +93,22 @@ class PdfScanner extends React.Component {
   }
 
   componentWillMount() {
-    if (Platform.OS === "android") {
-      const { onPictureTaken, onProcessing } = this.props;
-      DeviceEventEmitter.addListener("onPictureTaken", onPictureTaken);
-      DeviceEventEmitter.addListener("onProcessingChange", onProcessing);
+    if (Platform.OS === 'android') {
+      const {onPictureTaken, onProcessing, numOfRectangles} = this.props;
+      DeviceEventEmitter.addListener('onPictureTaken', onPictureTaken);
+      DeviceEventEmitter.addListener('onProcessingChange', onProcessing);
+      DeviceEventEmitter.addListener('numOfRectangles', numOfRectangles);
     }
   }
 
   componentWillUnmount() {
-    if (Platform.OS === "android") {
-      const { onPictureTaken, onProcessing } = this.props;
-      DeviceEventEmitter.removeListener("onPictureTaken", onPictureTaken);
-      DeviceEventEmitter.removeListener("onProcessingChange", onProcessing);
+    if (Platform.OS === 'android') {
+      const {onPictureTaken, onProcessing, numOfRectangles} = this.props;
+      DeviceEventEmitter.removeListener('onPictureTaken', onPictureTaken);
+      DeviceEventEmitter.removeListener('onProcessingChange', onProcessing);
+      DeviceEventEmitter.removeListener('numOfRectangles', numOfRectangles);
     }
+    // this.stopCamera();
   }
 
   capture() {
@@ -93,10 +117,16 @@ class PdfScanner extends React.Component {
   }
 
   render() {
-    if (!this.state.permissionsAuthorized) return null;
+    if (platforms.isAndroid) {
+      if (!this.props.openCamera) return <View style={{flex: 1}} />;
+    }
+
+    console.log('activeCamera1 => ', this.props.openCamera);
     return (
       <RNPdfScanner
         {...this.props}
+        numOfRectangles={this.sendOnnumOfRectanglesEvent.bind(this)}
+        openCamera={this.props.openCamera}
         onPictureTaken={this.sendOnPictureTakenEvent.bind(this)}
         onRectangleDetect={this.sendOnRectanleDetectEvent.bind(this)}
         useFrontCam={this.props.useFrontCam || false}
@@ -110,6 +140,7 @@ class PdfScanner extends React.Component {
         detectionRefreshRateInMS={this.props.detectionRefreshRateInMS || 50}
       />
     );
+    // }
   }
 }
 
@@ -118,6 +149,7 @@ PdfScanner.propTypes = {
   onRectangleDetect: PropTypes.func,
   overlayColor: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   enableTorch: PropTypes.bool,
+  openCamera: PropTypes.bool,
   useFrontCam: PropTypes.bool,
   saturation: PropTypes.number,
   brightness: PropTypes.number,
@@ -128,7 +160,7 @@ PdfScanner.propTypes = {
   documentAnimation: PropTypes.bool,
   noGrayScale: PropTypes.bool,
   manualOnly: PropTypes.bool,
-  ...View.propTypes // include the default view properties
+  ...View.propTypes, // include the default view properties
 };
 
 export default PdfScanner;

@@ -95,4 +95,12 @@ public class MainView extends FrameLayout {
     public void capture() {
         view.capture();
     }
+
+    public void stopCamera() {
+        view.stopCamera();
+    }
+
+    public void startCamera() { view.startCamera(); }
+
+    public void checkNotNullCamera() { view.checkNotNullCamera(); }
 }

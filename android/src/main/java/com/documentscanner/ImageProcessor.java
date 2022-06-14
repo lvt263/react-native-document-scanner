@@ -1,10 +1,8 @@
 package com.documentscanner;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.shapes.PathShape;
@@ -15,6 +13,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.documentscanner.views.OpenNoteCameraView;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.ChecksumException;
 import com.google.zxing.FormatException;
@@ -35,24 +35,19 @@ import com.documentscanner.views.HUDCanvasView;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import org.opencv.calib3d.Calib3d;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by allgood on 05/03/16.
@@ -74,6 +69,7 @@ public class ImageProcessor extends Handler {
     private int numOfSquares = 0;
     private int numOfRectangles = 10;
     private boolean noGrayscale = false;
+    private OpenNoteCameraView.OnScannerListener listener = null;
 
     public ImageProcessor(Looper looper, Handler uiHandler, OpenNoteCameraView mainActivity, Context context) {
         super(looper);
@@ -99,24 +95,45 @@ public class ImageProcessor extends Handler {
         this.noGrayscale = grayscale;
     }
 
+    public void setListener(OpenNoteCameraView.OnScannerListener listener) {
+        this.listener = listener;
+    }
+
+//    public WritableMap getNumOfRectangles() {
+//        WritableMap data = new WritableNativeMap();
+//        data.putInt("numOfRectangles", this.numOfSquares);
+//        return data;
+//    }
+
     public void handleMessage(Message msg) {
 
         if (msg.obj.getClass() == OpenNoteMessage.class) {
 
-            OpenNoteMessage obj = (OpenNoteMessage) msg.obj;
+            final OpenNoteMessage obj = (OpenNoteMessage) msg.obj;
 
             String command = obj.getCommand();
 
             Log.d(TAG, "Message Received: " + command + " - " + obj.getObj().toString());
 
-            if (command.equals("previewFrame")) {
-                processPreviewFrame((PreviewFrame) obj.getObj());
-            } else if (command.equals("pictureTaken")) {
-                processPicture((Mat) obj.getObj());
-            } else if (command.equals("colorMode")) {
-                colorMode = (Boolean) obj.getObj();
-            } else if (command.equals("filterMode")) {
-                filterMode = (Boolean) obj.getObj();
+            switch (command) {
+                case "previewFrame":
+                    mUiHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            processPreviewFrame((PreviewFrame) obj.getObj());
+                        }
+                    }, 500);
+
+                    break;
+                case "pictureTaken":
+                    processPicture((Mat) obj.getObj());
+                    break;
+                case "colorMode":
+                    colorMode = (Boolean) obj.getObj();
+                    break;
+                case "filterMode":
+                    filterMode = (Boolean) obj.getObj();
+                    break;
             }
         }
     }
@@ -156,6 +173,12 @@ public class ImageProcessor extends Handler {
 
         if (detectPreviewDocument(frame) && focused) {
             numOfSquares++;
+            if (listener != null){
+                WritableMap data = new WritableNativeMap();
+                data.putInt("numOfRectangles", this.numOfSquares);
+                this.listener.onNumOfSquares(data);
+            }
+
             if (numOfSquares == numOfRectangles) {
                 mMainActivity.requestPicture();
                 mMainActivity.waitSpinnerVisible();
@@ -409,7 +432,7 @@ public class ImageProcessor extends Handler {
     }
 
     private void enhanceDocument(Mat src) {
-        Imgproc.cvtColor(src, src, Imgproc.COLOR_RGBA2GRAY);
+//        Imgproc.cvtColor(src, src, Imgproc.COLOR_RGBA2GRAY);
         src.convertTo(src, CvType.CV_8UC1, colorGain, colorBias);
     }
 

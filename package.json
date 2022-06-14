@@ -1,26 +1,64 @@
 {
-  "name": "react-native-document-scanner",
-  "description": "Scan documents, automatic border detection, automatic crop",
-  "version": "1.4.3",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "_from": "git+https://github.com/Michaelvilleneuve/react-native-document-scanner.git",
+  "_id": "react-native-document-scanner@1.4.3",
+  "_inBundle": false,
+  "_integrity": "",
+  "_location": "/react-native-document-scanner",
+  "_phantomChildren": {
+    "asap": "2.0.6",
+    "isomorphic-fetch": "2.2.1",
+    "loose-envify": "1.4.0",
+    "object-assign": "4.1.1",
+    "prop-types": "15.7.2",
+    "setimmediate": "1.0.5",
+    "ua-parser-js": "0.7.21"
   },
-  "repository": {
+  "_requested": {
     "type": "git",
-    "url": "https://github.com/Michaelvilleneuve/react-native-document-scanner"
+    "raw": "react-native-document-scanner@git+https://github.com/Michaelvilleneuve/react-native-document-scanner.git",
+    "name": "react-native-document-scanner",
+    "escapedName": "react-native-document-scanner",
+    "rawSpec": "git+https://github.com/Michaelvilleneuve/react-native-document-scanner.git",
+    "saveSpec": "git+https://github.com/Michaelvilleneuve/react-native-document-scanner.git",
+    "fetchSpec": "https://github.com/Michaelvilleneuve/react-native-document-scanner.git",
+    "gitCommittish": null
   },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "git+https://github.com/Michaelvilleneuve/react-native-document-scanner.git#1c03ac3d7f806dd2c052362ac947cb90096fbc6f",
+  "_spec": "react-native-document-scanner@git+https://github.com/Michaelvilleneuve/react-native-document-scanner.git",
+  "_where": "/Users/thanhlv/Beetsoft/Project/Dscan",
+  "author": {
+    "name": "Michaël Villeneuve"
+  },
+  "bugs": {
+    "url": "https://github.com/Michaelvilleneuve/react-native-document-scanner/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "react": "16.0.0-beta.5"
+  },
+  "deprecated": false,
+  "description": "Scan documents, automatic border detection, automatic crop",
+  "homepage": "https://github.com/Michaelvilleneuve/react-native-document-scanner#readme",
   "keywords": [
     "react-native",
     "scanner",
     "ios"
   ],
-  "author": "Michaël Villeneuve",
   "license": "MIT",
+  "main": "index.js",
+  "name": "react-native-document-scanner",
   "peerDependencies": {
     "react-native": "0.49.3"
   },
-  "dependencies": {
-    "react": "16.0.0-beta.5"
-  }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Michaelvilleneuve/react-native-document-scanner.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.4.3"
 }
